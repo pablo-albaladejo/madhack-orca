@@ -42,8 +42,23 @@ Both agents must run simultaneously for end-to-end testing.
 - @docs/event-brief.md for hackathon rules and judging criteria
 - A2A protocol spec: https://a2a-protocol.org/latest/specification/
 
+## Subagents — Consult on EVERY Decision
+
+Before any technical decision, feature addition, or architecture change, delegate to the relevant subagents. They run proactively, not on demand.
+
+| Agent | Role | When to consult |
+|-------|------|-----------------|
+| `hackathon-judge` | Scores decisions against real judging criteria | Every feature/architecture decision |
+| `demo-coach` | Ensures work is visible in the 3-5 min demo | Every feature/architecture decision |
+| `ai-engineer` | Technical architecture for LLM agents | Agent design, prompts, graph structure |
+| `a2a-researcher` | A2A protocol authority | Any A2A protocol question before writing code |
+| `finops` | Token efficiency and cost optimization | Prompt design, model selection, LLM calls |
+
+IMPORTANT: Run `hackathon-judge` and `demo-coach` together on every significant decision. If something won't score points or won't be visible in the demo, don't build it.
+
 ## IMPORTANT
 
 - Do NOT over-engineer. This is a 2-hour hackathon build with a 3-5 minute demo.
 - Two developers work in parallel: senior TS on provider, Python dev on consumer. Keep workstreams independent.
 - Always verify agent-to-agent communication after changes.
+- Every decision must pass two gates: "Does this score points?" (judge) and "Will this be visible?" (demo-coach).
