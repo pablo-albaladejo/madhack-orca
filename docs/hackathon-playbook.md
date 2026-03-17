@@ -15,7 +15,15 @@ OPENWEATHER_API_KEY=xxx
 #    https://console.cloud.google.com → New project → Enable "Places API (New)" → Credentials → API key
 GOOGLE_PLACES_API_KEY=xxx
 
-# 3. Anthropic (para el consumer LLM)
+# 3. SerpAPI Google Flights (gratis 250 búsquedas/mes)
+#    https://serpapi.com/users/sign_up → Dashboard → API key
+SERPAPI_API_KEY=xxx
+
+# 4. Ticketmaster (gratis 5000 calls/día)
+#    https://developer.ticketmaster.com/ → My Apps → Create → Consumer Key
+TICKETMASTER_API_KEY=xxx
+
+# 5. Anthropic (para el consumer LLM)
 ANTHROPIC_API_KEY=xxx
 ```
 
@@ -32,14 +40,76 @@ pip --version
 
 ```bash
 # OpenWeatherMap
-curl "https://api.openweathermap.org/data/2.5/forecast?q=Madrid&appid=$OPENWEATHER_API_KEY&units=metric&cnt=5"
+curl "https://api.openweathermap.org/data/2.5/forecast?q=Madrid&appid=$OPENWEATHER_API_KEY&units=metric&cnt=3"
 
 # Google Places
-curl -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" \
-  "https://places.googleapis.com/v1/places:searchNearby" \
+curl -X POST "https://places.googleapis.com/v1/places:searchNearby" \
+  -H "Content-Type: application/json" \
+  -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" \
+  -H "X-Goog-FieldMask: places.displayName,places.rating" \
   -d '{"locationRestriction":{"circle":{"center":{"latitude":40.4168,"longitude":-3.7038},"radius":1000}},"includedTypes":["restaurant"],"maxResultCount":3}'
 
+# SerpAPI Google Flights
+curl "https://serpapi.com/search.json?engine=google_flights&departure_id=MAD&arrival_id=BCN&outbound_date=2026-03-20&type=2&currency=EUR&api_key=$SERPAPI_API_KEY"
+
+# Ticketmaster
+curl "https://app.ticketmaster.com/discovery/v2/events.json?city=Barcelona&size=3&apikey=$TICKETMASTER_API_KEY"
 ```
+
+---
+
+## Lo que ya está construido
+
+```
+provider-agent/          ← TypeScript/Express, 6 A2A skills
+├── src/
+│   ├── index.ts         # Express + A2A handler + skill registration
+│   ├── agent-card.ts    # Agent Card con 6 skills
+│   ├── executor.ts      # A2A executor (routes → skills → artifacts)
+│   ├── router.ts        # Keyword-based routing
+│   └── skills/
+│       ├── cities.ts    # Shared: 14 EU cities, coords, IATA codes
+│       ├── weather.ts   # OpenWeatherMap (real + mock)
+│       ├── flights.ts   # SerpAPI Google Flights (real + mock + booking)
+│       ├── hotels.ts    # Mock data + booking/cancellation
+│       ├── restaurants.ts # Google Places (real + mock)
+│       ├── activities.ts  # Google Places (real + mock)
+│       └── events.ts   # Ticketmaster (real + mock)
+
+consumer-agent/          ← Python/LangGraph, 7 tools
+├── main.py              # FastAPI POST /message + /health
+├── agent.py             # create_react_agent + system prompt
+├── a2a_client.py        # A2A discovery + message sender (cached card)
+└── tools.py             # 7 async tools delegating to provider via A2A
+
+chat-ui/                 ← Streamlit
+├── app.py               # Chat UI + A2A activity log sidebar
+└── requirements.txt
+
+start.sh                 # Launches all 3 components
+```
+
+### APIs integradas
+
+| Skill | API | Datos | Key env var |
+|-------|-----|-------|-------------|
+| weather | OpenWeatherMap | Real + mock fallback | `OPENWEATHER_API_KEY` |
+| flights | SerpAPI Google Flights | Real + mock + booking | `SERPAPI_API_KEY` |
+| restaurants | Google Places | Real + mock fallback | `GOOGLE_PLACES_API_KEY` |
+| activities | Google Places | Real + mock fallback | `GOOGLE_PLACES_API_KEY` |
+| events | Ticketmaster | Real + mock fallback | `TICKETMASTER_API_KEY` |
+| hotels | Curated mock | Mock + booking/cancel | (ninguna) |
+
+### Key features
+
+- **6 A2A skills** en el provider (5 APIs reales + 1 mock)
+- **7 LangChain tools** en el consumer (6 search + 1 book)
+- **Multi-turn**: contextId tracking, MemorySaver checkpointer
+- **Booking/cancellation**: Hotels y flights devuelven confirmación
+- **Weather-aware itineraries**: indoor cuando llueve, outdoor con sol
+- **Activity log sidebar**: muestra las 6 llamadas A2A al provider
+- **Mock fallback**: todos los skills funcionan sin API keys
+- **Agent timeout**: 90s máximo para evitar cuelgues en demo
 
 ---
 
@@ -52,10 +122,10 @@ MINUTO    DEV 1 (TypeScript/Provider)           DEV 2 (Python/Consumer)
 10-25     A2A server + Agent Card + 1 skill      A2A client + discovery
 25-35     ── CHECKPOINT 1: consumer llama provider via A2A ──
 35-55     Añadir skills (hotels, restaurants)     ReAct agent + tools + system prompt
-55-70     Añadir skills (activities, flights)     FastAPI /message endpoint
-70-85     Booking actions + console logging       Streamlit chat UI + activity log
+55-70     Añadir skills (activities, events)      FastAPI /message endpoint
+70-85     Flights + booking + console logging     Streamlit chat UI + activity log
 85-100    ── CHECKPOINT 2: demo completa E2E ──
-100-110   Swap mock → APIs reales (si hay tiempo) Polish: prompts, UX
+100-110   Polish: test multi-turn, booking       Polish: prompts, UX
 110-120   ── ENSAYO DE DEMO (2 veces mínimo) ──
 ```
 
@@ -67,356 +137,64 @@ MINUTO    DEV 1 (TypeScript/Provider)           DEV 2 (Python/Consumer)
 
 ---
 
-## Fase 1: Setup (10 min)
-
-### Dev 1 — Provider
+## Arrancar todo
 
 ```bash
-mkdir -p provider-agent && cd provider-agent
-npm init -y
-npm install express @a2a-js/sdk dotenv
-npm install -D typescript tsx @types/express @types/node
+# Opción 1: script automático
+./start.sh
 
-# tsconfig.json
-cat > tsconfig.json << 'EOF'
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "resolveJsonModule": true
-  },
-  "include": ["src"]
-}
-EOF
+# Opción 2: manual (3 terminales)
+# Terminal 1 — Provider
+cd provider-agent && npm run dev          # localhost:3000
 
-mkdir src
+# Terminal 2 — Consumer
+cd consumer-agent && source .venv/bin/activate && python main.py  # localhost:8000
+
+# Terminal 3 — Chat UI
+cd chat-ui && pip install -r requirements.txt && streamlit run app.py  # localhost:8501
 ```
 
-Añadir a `package.json`:
-```json
-{
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch src/index.ts"
-  }
-}
-```
-
-`.env`:
-```
-OPENWEATHER_API_KEY=
-GOOGLE_PLACES_API_KEY=
-PORT=3000
-```
-
-### Dev 2 — Consumer
+### Verificar que todo funciona
 
 ```bash
-mkdir -p consumer-agent && cd consumer-agent
-python -m venv .venv && source .venv/bin/activate
+# Agent Card (6 skills)
+curl -s http://localhost:3000/.well-known/agent-card.json | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'{d[\"name\"]}: {len(d[\"skills\"])} skills'); [print(f'  - {s[\"id\"]}') for s in d['skills']]"
 
-cat > requirements.txt << 'EOF'
-a2a-sdk
-langgraph
-langchain-anthropic
-langchain-core
-python-dotenv
-fastapi
-uvicorn[standard]
-httpx
-EOF
+# Consumer health
+curl http://localhost:8000/health
 
-pip install -r requirements.txt
-```
-
-`.env`:
-```
-ANTHROPIC_API_KEY=
-PROVIDER_URL=http://localhost:3000
-MODEL_NAME=claude-sonnet-4-20250514
+# Full E2E test
+curl -s -X POST http://localhost:8000/message \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Plan a weekend in Barcelona"}' | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['response'][:500]); print(f'\nActivity: {len(d[\"activity_log\"])} A2A calls')"
 ```
 
 ---
 
-## Fase 2: Provider A2A Server (15 min)
-
-### Estructura de archivos
-
-```
-provider-agent/src/
-├── index.ts              # Express server + A2A handler
-├── agent-card.ts         # Agent Card definition
-├── router.ts             # Keyword-based skill router
-└── skills/
-    ├── weather.ts        # OpenWeatherMap
-    ├── flights.ts        # Amadeus
-    ├── restaurants.ts    # Google Places
-    ├── activities.ts     # Google Places
-    └── hotels.ts         # Mock data + booking
-```
-
-### Agent Card (agent-card.ts)
-
-```typescript
-export const agentCard = {
-  name: 'Travel Provider Agent',
-  description: 'Provides travel data: weather, flights, hotels, restaurants, activities',
-  url: 'http://localhost:3000/',
-  version: '1.0.0',
-  capabilities: { streaming: false, pushNotifications: false },
-  defaultInputModes: ['text'],
-  defaultOutputModes: ['text'],
-  skills: [
-    {
-      id: 'weather',
-      name: 'Weather Forecast',
-      description: 'Get weather forecast for a city',
-      tags: ['weather', 'forecast', 'clima'],
-      examples: ['weather in Barcelona this weekend']
-    },
-    {
-      id: 'flights',
-      name: 'Flight Search',
-      description: 'Search flights between cities',
-      tags: ['flights', 'vuelos', 'fly'],
-      examples: ['flights from Madrid to Barcelona on Friday']
-    },
-    {
-      id: 'hotels',
-      name: 'Hotel Search & Booking',
-      description: 'Search hotels and make bookings',
-      tags: ['hotel', 'accommodation', 'book hotel', 'cancel hotel'],
-      examples: ['hotels in Barcelona', 'book Hotel Gòtic']
-    },
-    {
-      id: 'restaurants',
-      name: 'Restaurant Search',
-      description: 'Find restaurants in a city',
-      tags: ['restaurant', 'food', 'dining'],
-      examples: ['restaurants in Barcelona Gothic Quarter']
-    },
-    {
-      id: 'activities',
-      name: 'Activities & Attractions',
-      description: 'Find museums, attractions, tours',
-      tags: ['activities', 'museum', 'attractions', 'tours'],
-      examples: ['activities in Barcelona']
-    }
-  ]
-}
-```
-
-### Keyword router (router.ts)
-
-```typescript
-import type { SkillHandler } from './skills/types.js'
-
-const skillMap = new Map<string[], SkillHandler>()
-
-export function registerSkill(keywords: string[], handler: SkillHandler) {
-  skillMap.set(keywords, handler)
-}
-
-export function routeMessage(text: string): SkillHandler | null {
-  const lower = text.toLowerCase()
-  for (const [keywords, handler] of skillMap) {
-    if (keywords.some(kw => lower.includes(kw))) return handler
-  }
-  return null
-}
-```
-
-### Skill interface
-
-```typescript
-// skills/types.ts
-export type SkillHandler = (message: string) => Promise<{
-  text: string
-  data: Record<string, unknown>
-}>
-```
-
-**Cada skill sigue este patrón**:
-1. Parsear el mensaje para extraer ciudad/parámetros
-2. Llamar API real (o mock si no hay key)
-3. Devolver `{ text: "resumen", data: { resultados } }`
-
----
-
-## Fase 3: Consumer A2A Client (15 min)
-
-### Estructura de archivos
-
-```
-consumer-agent/
-├── main.py               # FastAPI app + /message endpoint
-├── agent.py              # create_react_agent setup
-├── a2a_client.py         # A2A discovery + message sender
-├── tools.py              # LangChain tools (one per skill)
-└── .env
-```
-
-### A2A Client (a2a_client.py)
-
-```python
-import httpx
-from a2a.client import A2AClient, A2ACardResolver
-from a2a.types import SendMessageRequest, MessageSendParams
-
-class TravelProviderClient:
-    def __init__(self, base_url: str = 'http://localhost:3000'):
-        self.base_url = base_url
-        self.client = None
-        self.skills = []
-
-    async def discover(self):
-        async with httpx.AsyncClient() as http:
-            resolver = A2ACardResolver(httpx_client=http, base_url=self.base_url)
-            card = await resolver.get_agent_card()
-            self.skills = card.skills
-            self.client = A2AClient(httpx_client=http, agent_card=card)
-        return self.skills
-
-    async def send(self, text: str, context_id: str | None = None) -> dict:
-        async with httpx.AsyncClient() as http:
-            resolver = A2ACardResolver(httpx_client=http, base_url=self.base_url)
-            card = await resolver.get_agent_card()
-            client = A2AClient(httpx_client=http, agent_card=card)
-
-            from uuid import uuid4
-            msg = {
-                'role': 'user',
-                'parts': [{'kind': 'text', 'text': text}],
-                'messageId': uuid4().hex,
-            }
-            if context_id:
-                msg['contextId'] = context_id
-
-            request = SendMessageRequest(
-                id=str(uuid4()),
-                params=MessageSendParams(message=msg)
-            )
-            response = await client.send_message(request)
-            # Extract text and data from artifacts
-            return self._parse_response(response)
-```
-
-### LangGraph Agent (agent.py)
-
-```python
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import MemorySaver
-from langchain_anthropic import ChatAnthropic
-
-SYSTEM_PROMPT = """You are a travel planning assistant. You have tools to query a travel provider agent.
-
-IMPORTANT: When calling tools, use these EXACT keyword patterns:
-- Weather: "weather forecast {city}"
-- Flights: "flights from {origin} to {destination} on {date}"
-- Hotels: "hotels in {city}" or "book hotel {name}" or "cancel booking {id}"
-- Restaurants: "restaurants in {city} {area}"
-- Activities: "activities in {city}"
-
-For trip planning requests, call all relevant skills, then compose a day-by-day
-itinerary that accounts for weather conditions. If it rains, suggest indoor
-activities. If sunny, suggest outdoor options.
-
-Keep responses concise and well-formatted."""
-
-def create_agent(tools):
-    model = ChatAnthropic(model='claude-sonnet-4-20250514')
-    checkpointer = MemorySaver()
-    return create_react_agent(model, tools, prompt=SYSTEM_PROMPT, checkpointer=checkpointer)
-```
-
-### Key: contextId → thread_id mapping
-
-```python
-# In main.py, when calling the agent:
-config = {'configurable': {'thread_id': context_id or str(uuid4())}}
-result = await agent.ainvoke({'messages': [('user', text)]}, config)
-```
-
----
-
-## Fase 4: Chat UI (15 min)
-
-### Streamlit App (chat-ui/app.py)
-
-```python
-import streamlit as st
-import requests
-
-st.set_page_config(page_title='Travel Planner', layout='wide')
-
-# Sidebar: A2A activity log
-with st.sidebar:
-    st.header('A2A Activity')
-    if 'activity_log' in st.session_state:
-        for entry in st.session_state.activity_log:
-            st.write(f"{'✅' if entry['status'] == 'completed' else '⏳'} {entry['skill']}")
-
-# Main chat
-st.title('Weekend Escape Planner')
-
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
-    st.session_state.context_id = None
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg['role']):
-        st.markdown(msg['content'])
-
-if prompt := st.chat_input('Where do you want to go?'):
-    st.session_state.messages.append({'role': 'user', 'content': prompt})
-    with st.chat_message('user'):
-        st.markdown(prompt)
-
-    with st.chat_message('assistant'):
-        with st.spinner('Planning your trip...'):
-            resp = requests.post('http://localhost:8000/message', json={
-                'text': prompt,
-                'context_id': st.session_state.context_id
-            })
-            data = resp.json()
-            st.markdown(data['response'])
-            st.session_state.context_id = data['context_id']
-            st.session_state.activity_log = data.get('activity_log', [])
-
-    st.session_state.messages.append({'role': 'assistant', 'content': data['response']})
-    st.rerun()
-```
-
----
-
-## Fase 5: Demo Script (ensayar 2+ veces)
+## Demo Script (ensayar 2+ veces)
 
 ### Narrativa (3 min)
 
 | Tiempo | Acción | Lo que dices |
 |--------|--------|-------------|
-| 0:00 | Abrir chat UI | "Nuestro sistema usa dos agentes A2A: un consumer que razona y un provider con 5 skills de viajes" |
-| 0:15 | Escribir "Plan a weekend in Barcelona this Friday" | "El consumer descubre al provider via Agent Card y decide qué skills necesita" |
-| 0:20 | Señalar sidebar | "Aquí vemos las 5 llamadas A2A en tiempo real: clima, vuelos, hotel, restaurantes, actividades" |
-| 0:40 | Leer el itinerario | "Fijaos: como llueve el sábado, sugiere museos por la mañana. El domingo con sol, actividades al aire libre" |
-| 1:00 | Escribir "change the hotel to something cheaper" | "Multi-turn: el consumer recuerda el contexto y solo re-consulta la skill de hoteles" |
-| 1:20 | Señalar sidebar | "Solo una llamada A2A esta vez, no cinco" |
-| 1:30 | Escribir "book the hotel" | "CRUD completo: booking via A2A, el provider devuelve confirmación" |
-| 1:45 | Mostrar terminal del provider | "Aquí se ven las peticiones JSON-RPC entrando al provider" |
-| 2:00 | Abrir `localhost:3000/.well-known/agent-card.json` | "Agent Card estándar A2A con las 5 skills" |
-| 2:15 | Explicar arquitectura | "Consumer en Python/LangGraph, Provider en TypeScript/Express, comunicación 100% A2A protocol" |
+| 0:00 | Abrir chat UI + terminal provider visible | "Dos agentes A2A: consumer en Python/LangGraph, provider en TypeScript/Express con 6 skills de viajes" |
+| 0:15 | Escribir "Plan a weekend in Barcelona" | "El consumer descubre al provider via Agent Card y decide qué skills necesita" |
+| 0:20 | Señalar sidebar | "6 llamadas A2A al provider: clima, vuelos, hoteles, restaurantes, actividades y **eventos reales** de Ticketmaster" |
+| 0:40 | Leer el itinerario | "El itinerario es weather-aware: si llueve sugiere museos, con sol actividades al aire libre. Incluye eventos reales del fin de semana" |
+| 1:00 | Escribir "change the hotel to something cheaper" | "Multi-turn: el consumer recuerda el contexto. Solo re-consulta la skill de hoteles, no las 6" |
+| 1:20 | Señalar sidebar | "Solo 1 llamada A2A esta vez" |
+| 1:30 | Escribir "book the hotel" | "CRUD completo: booking via A2A. El provider devuelve número de confirmación" |
+| 1:45 | Señalar terminal del provider | "Aquí se ven los JSON-RPC requests entrando al provider: skill routing, task completion" |
+| 2:00 | Abrir `localhost:3000/.well-known/agent-card.json` | "Agent Card estándar A2A v0.3 con 6 skills" |
+| 2:15 | Explicar arquitectura | "5 APIs reales (OpenWeather, Google Flights, Google Places x2, Ticketmaster), protocolo A2A puro, todo en local" |
 | 2:30 | Fin. Preguntas | |
 
 ### Queries de backup (si algo falla)
 
 ```
-"What's the weather in Madrid this weekend?"      → Solo 1 skill, rápido
-"Find restaurants near Sol in Madrid"               → Solo 1 skill, rápido
+"What's the weather in Madrid this weekend?"      → 1 skill, rápido
+"Find restaurants near Sol in Madrid"               → 1 skill, rápido
+"What events are on in Valencia?"                   → 1 skill, eventos
 "Plan a trip to Sevilla"                            → Full flow, destino diferente
 ```
 
@@ -426,13 +204,16 @@ if prompt := st.chat_input('Where do you want to go?'):
 
 | Problema | Solución |
 |----------|----------|
-| Provider no arranca | `npm install` de nuevo. Verificar que `tsx` está instalado |
-| Consumer no descubre provider | Verificar que provider corre en :3000. `curl http://localhost:3000/.well-known/agent-card.json` |
-| A2A message/send falla | Verificar JSON-RPC format. El endpoint es `/` (root), no `/a2a` |
-| Amadeus OAuth falla | Cambiar a mock. En `.env`: dejar `AMADEUS_API_KEY` vacío |
-| LLM no llama tools | Revisar system prompt — debe incluir keywords explícitos |
+| Provider no arranca | `cd provider-agent && npm install` de nuevo |
+| Consumer no descubre provider | Verificar provider en :3000. `curl http://localhost:3000/.well-known/agent-card.json` |
+| A2A message/send falla | El endpoint JSON-RPC es `/` (root), no `/a2a` |
+| LLM no llama tools | Revisar system prompt — tiene "MUST call tools immediately" |
+| LLM llama tools 2 veces | El prompt tiene "Call tools ONCE. Never call a second time" |
 | Multi-turn no funciona | Verificar que `context_id` se devuelve al chat UI y se reenvía |
 | Streamlit no actualiza | `st.rerun()` después de cada respuesta |
+| Timeout (>90s) | Alguna API está lenta. Quitar la API key para usar mock fallback |
+| OpenWeather 404 | Ciudad no reconocida. Las 14 ciudades soportadas están en `cities.ts` |
+| Puerto ocupado | `lsof -ti:3000 | xargs kill -9` (o :8000, :8501) |
 
 ---
 
@@ -443,7 +224,9 @@ Si el briefing cambia algo:
 | Cambio | Qué tocar |
 |--------|-----------|
 | Otro dominio (no viajes) | Cambiar skills en provider + system prompt en consumer |
-| Otra API | Nuevo archivo en `skills/`, registrar keywords en router |
+| Otra API | Nuevo archivo en `skills/`, añadir ciudad en `cities.ts`, registrar keywords en `index.ts` |
+| Más ciudades | Añadir a `cities.ts` (coords, IATA) + mock data en skills relevantes |
 | Orca da su propio UI | Desconectar Streamlit, apuntar Orca a `POST localhost:8000/message` |
 | Piden Python en provider | Reescribir provider con `a2a-sdk` Python (ver docs/a2a-research.md §9.3) |
 | Piden streaming | Cambiar `message/send` → `message/stream` en ambos lados |
+| Nuevo skill | Copiar `activities.ts` como template, registrar en `index.ts`, añadir tool en `tools.py` |
