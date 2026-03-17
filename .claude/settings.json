@@ -1,0 +1,23 @@
+{
+  "effortLevel": "high",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "Bash",
+      "WebSearch",
+      "WebFetch",
+      "mcp__playwright__*",
+      "mcp__vitest__*",
+      "mcp__context7__*",
+      "WebSearch",
+      "WebFetch",
+      "mcp__awslabs_*",
+      "mcp__ide__getDiagnostics"
+    ],
+    "deny": ["Bash(rm -rf /)", "Bash(rm -rf /*)", "Bash(git push --force *)"]
+  }
+}
