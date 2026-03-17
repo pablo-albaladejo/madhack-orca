@@ -17,25 +17,30 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
     st.session_state.context_id = None
     st.session_state.activity_log = []
+    st.session_state.history = []  # list of { query, activity_log }
 
-# Sidebar: A2A activity log (final state after response)
+# Sidebar: conversation history with A2A details
 with st.sidebar:
-    st.header('A2A Activity Log')
-    st.caption('Agent-to-agent communication')
-    if st.session_state.activity_log:
-        for entry in st.session_state.activity_log:
-            status = entry.get('status', 'unknown')
-            skill = entry.get('skill_query', '?')
-            ts = entry.get('timestamp', '')
-            label = f'[{ts}] {skill}' if ts else skill
-            if status == 'completed':
-                st.success(label, icon='✅')
-            elif status == 'error':
-                st.error(label, icon='❌')
-            else:
-                st.info(label, icon='⏳')
+    st.header('Conversation History')
+    st.caption('Each query and its A2A calls')
+    if st.session_state.history:
+        for i, turn in enumerate(reversed(st.session_state.history)):
+            query = turn.get('query', '?')
+            activity = turn.get('activity_log', [])
+            completed = sum(1 for e in activity if e.get('status') == 'completed')
+            with st.expander(f'🗣️ {query}  ({completed} A2A calls)', expanded=(i == 0)):
+                for entry in activity:
+                    status = entry.get('status', 'unknown')
+                    skill = entry.get('skill_query', '?')
+                    ts = entry.get('timestamp', '')
+                    if status == 'completed':
+                        st.caption(f'✅ [{ts}] {skill}')
+                    elif status == 'error':
+                        st.caption(f'❌ [{ts}] {skill}')
+                    else:
+                        st.caption(f'⏳ {skill}')
     else:
-        st.info('No A2A calls yet. Send a message to start.', icon='💬')
+        st.info('No conversations yet. Send a message to start.', icon='💬')
 
 # Display chat history
 for msg in st.session_state.messages:
@@ -102,8 +107,14 @@ if prompt := st.chat_input('Where do you want to go? (e.g., "Plan a weekend in B
                 ts = entry.get('timestamp', '')
                 preview = entry.get('response_preview', '')
                 if s == 'completed':
-                    # Show first line of response as preview
-                    short = preview.split('\n')[0][:80] if preview else ''
+                    # Show first data line (skip header like "Weather forecast for X:")
+                    if preview:
+                        plines = [l.strip() for l in preview.split('\n') if l.strip()]
+                        # Take first line that has actual data (skip "Category in City:" headers)
+                        short = next((l for l in plines if not l.endswith(':')), plines[0] if plines else '')
+                        short = short[:80]
+                    else:
+                        short = ''
                     detail = f'  \n  ↳ *{short}*' if short else ''
                     lines.append(f'✅ `{skill}` [{ts}]{detail}')
                 elif s == 'error':
@@ -133,6 +144,10 @@ if prompt := st.chat_input('Where do you want to go? (e.g., "Plan a weekend in B
         # Final state update
         st.session_state.context_id = data.get('context_id')
         st.session_state.activity_log = data.get('activity_log', [])
+        st.session_state.history.append({
+            'query': prompt,
+            'activity_log': data.get('activity_log', []),
+        })
         st.session_state.messages.append({
             'role': 'assistant',
             'content': response_text,

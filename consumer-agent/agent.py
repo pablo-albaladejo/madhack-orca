@@ -10,6 +10,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 
 from tools import ALL_TOOLS, get_client, set_context_id
+from activity_store import get_activity_store
 
 # Maximum seconds to wait for the full agent invocation (LLM + tool calls).
 # Prevents the demo from hanging if the LLM or provider stalls.
@@ -85,8 +86,9 @@ async def invoke_agent(text: str, context_id: str) -> dict:
             timeout=AGENT_TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
-        client = get_client()
-        activity_log = client.get_activity_log()
+        store = get_activity_store()
+        activity_log = store.get(context_id)
+        get_client().get_activity_log()  # clear local
         return {
             'response': 'Sorry, the request took too long. Please try again with a simpler query.',
             'activity_log': activity_log,
@@ -104,9 +106,11 @@ async def invoke_agent(text: str, context_id: str) -> dict:
             if isinstance(block, dict) and block.get('type') == 'text' or isinstance(block, str)
         )
 
-    # Collect activity log from the A2A client
-    client = get_client()
-    activity_log = client.get_activity_log()
+    # Collect activity log from the shared store (has timestamps + previews)
+    store = get_activity_store()
+    activity_log = store.get(context_id)
+    # Also clear the local client log
+    get_client().get_activity_log()
 
     return {
         'response': response_text,
