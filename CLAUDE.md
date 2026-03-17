@@ -38,7 +38,7 @@ Both agents must run simultaneously for end-to-end testing.
 
 ## Key References
 
-- @docs/a2a-research.md Section 9 has copy-paste implementation patterns for both agents
+- `docs/a2a-research.md` Section 9 has copy-paste implementation patterns for both agents
 - @docs/event-brief.md for hackathon rules and judging criteria
 - A2A protocol spec: https://a2a-protocol.org/latest/specification/
 
