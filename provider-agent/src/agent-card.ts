@@ -2,7 +2,7 @@ import type { AgentCard } from '@a2a-js/sdk'
 
 export const agentCard: AgentCard = {
   name: 'Travel Provider',
-  description: 'A travel assistant that provides weather forecasts, flight search, hotel booking, restaurant recommendations, and activity suggestions for European cities.',
+  description: 'A travel assistant that provides weather forecasts, flight search, hotel booking, restaurant recommendations, activity suggestions, and live event listings for European cities.',
   url: 'http://localhost:3000/',
   version: '1.0.0',
   protocolVersion: '0.3',
@@ -75,6 +75,19 @@ export const agentCard: AgentCard = {
         'Activities in Barcelona',
         'Museums in Madrid',
         'Things to do in Lisbon',
+      ],
+      inputModes: ['text'],
+      outputModes: ['text', 'data'],
+    },
+    {
+      id: 'events',
+      name: 'Events & Shows',
+      description: 'Find upcoming events, concerts, sports matches, and theatre shows in European cities this weekend.',
+      tags: ['events', 'event', 'concert', 'show', 'teatro', 'espectaculo', 'match', 'ticket'],
+      examples: [
+        'Events in Barcelona this weekend',
+        'Concerts in Madrid',
+        'What shows are on in Valencia?',
       ],
       inputModes: ['text'],
       outputModes: ['text', 'data'],

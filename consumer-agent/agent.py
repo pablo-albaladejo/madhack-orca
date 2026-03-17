@@ -23,6 +23,7 @@ When the user mentions a destination, IMMEDIATELY call ALL of these tools (do no
 - search_hotels(destination)
 - search_restaurants(destination)
 - search_activities(destination)
+- search_events(destination)
 
 If the user doesn't specify origin city, assume Madrid. If no date, assume this coming weekend.
 

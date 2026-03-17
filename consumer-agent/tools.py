@@ -86,6 +86,14 @@ async def search_activities(query: str) -> str:
     return _compact(result['text'])
 
 
+@tool
+async def search_events(query: str) -> str:
+    """Search events and shows this weekend. Input: '{city}'. Example: 'Barcelona'. Returns concerts, sports, theatre with dates, venues, and prices."""
+    client = get_client()
+    result = await client.send(f'events {query}', context_id=_context_id)
+    return _compact(result['text'])
+
+
 ALL_TOOLS = [
     search_weather,
     search_flights,
@@ -93,4 +101,5 @@ ALL_TOOLS = [
     book_hotel,
     search_restaurants,
     search_activities,
+    search_events,
 ]

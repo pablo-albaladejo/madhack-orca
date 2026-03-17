@@ -16,6 +16,7 @@ import { flightsHandler } from './skills/flights.js'
 import { hotelsHandler } from './skills/hotels.js'
 import { restaurantsHandler } from './skills/restaurants.js'
 import { activitiesHandler } from './skills/activities.js'
+import { eventsHandler } from './skills/events.js'
 
 // Load .env from parent directory
 const __filename = fileURLToPath(import.meta.url)
@@ -28,6 +29,7 @@ registerSkill('flights', ['flight', 'flights', 'vuelo', 'fly', 'airplane', 'book
 registerSkill('hotels', ['hotel', 'hotels', 'accommodation', 'book hotel', 'cancel hotel', 'booking', 'hostel', 'stay'], hotelsHandler)
 registerSkill('restaurants', ['restaurant', 'restaurants', 'food', 'dining', 'eat', 'comer', 'comida'], restaurantsHandler)
 registerSkill('activities', ['activit', 'museum', 'attraction', 'tours', 'things to do', 'sightseeing', 'visit', 'que hacer'], activitiesHandler)
+registerSkill('events', ['event', 'events', 'concert', 'show', 'teatro', 'espectaculo', 'match', 'ticket'], eventsHandler)
 
 // ANSI colors
 const CYAN = '\x1b[36m'
@@ -65,6 +67,7 @@ app.listen(PORT, () => {
     OPENWEATHER_API_KEY: !!process.env.OPENWEATHER_API_KEY,
     GOOGLE_PLACES_API_KEY: !!process.env.GOOGLE_PLACES_API_KEY,
     SERPAPI_API_KEY: !!process.env.SERPAPI_API_KEY,
+    TICKETMASTER_API_KEY: !!process.env.TICKETMASTER_API_KEY,
   }
   console.log(`${DIM}  API Keys:`)
   for (const [key, present] of Object.entries(keys)) {
