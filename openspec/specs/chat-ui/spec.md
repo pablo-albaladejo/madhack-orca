@@ -21,19 +21,19 @@ The chat UI SHALL communicate with the consumer exclusively via `POST /message` 
 - **WHEN** Orca provides its own UI at the hackathon
 - **THEN** the consumer's `/message` endpoint works identically without the Streamlit UI running
 
-### Requirement: Chat UI shows A2A activity log
-The chat UI SHALL display a sidebar showing A2A activity — which skills were called and their status (completed/error), parsed from the `activity_log` field in the consumer response.
+### Requirement: Chat UI shows live A2A progress during wait
+The chat UI SHALL poll `GET /activity/{context_id}` every 0.3s via ThreadPoolExecutor while waiting for the `/message` response, rendering progress at top-level with `st.empty().markdown()`.
 
-#### Scenario: Activity log after trip planning
-- **WHEN** the consumer returns a response with 6 entries in activity_log
-- **THEN** the sidebar shows 6 entries with status icons (completed/error)
+#### Scenario: Live progress during processing
+- **WHEN** the consumer is processing a trip planning request
+- **THEN** the main area shows a live-updating block with ⏳/✅ icons, skill names, timestamps, and response previews
 
-### Requirement: Chat UI shows loading state
-The chat UI SHALL display a spinner while waiting for the consumer to respond.
+### Requirement: Chat UI shows final activity log in sidebar
+The sidebar SHALL display the final activity log with timestamps and status icons after `st.rerun()`.
 
-#### Scenario: Slow response
-- **WHEN** the consumer takes 15 seconds to respond
-- **THEN** the UI shows "Planning your trip... (calling travel skills via A2A)" spinner
+#### Scenario: Final sidebar state
+- **WHEN** the response arrives and the page reruns
+- **THEN** the sidebar shows all skills with ✅ icons and `[HH:MM:SS]` timestamps
 
 ### Requirement: Chat UI is launchable with a single command
 The chat UI SHALL start with `streamlit run app.py` with no additional configuration beyond the consumer URL (default localhost:8000).
