@@ -8,12 +8,15 @@ from uuid import uuid4
 from a2a.client import A2ACardResolver, A2AClient
 from a2a.types import MessageSendParams, SendMessageRequest
 
+from activity_store import get_activity_store
+
 
 class TravelProviderClient:
     """Wraps A2A protocol communication with the travel provider agent.
 
     Caches the agent card to avoid re-resolving on every call.
     Creates a fresh httpx.AsyncClient per send() for thread safety.
+    Writes activity entries to the shared ActivityStore for live polling.
     """
 
     def __init__(self, base_url: str = 'http://localhost:3000'):
@@ -47,10 +50,15 @@ class TravelProviderClient:
         """Send a message to the provider via A2A message/send.
 
         Uses cached agent card. Creates fresh httpx client for thread safety.
+        Writes to both local activity_log and shared ActivityStore.
         """
-        # Use provided context_id, or fall back to stored one
         ctx = context_id or self.context_id
-        self.activity_log.append({'skill_query': text, 'status': 'sending'})
+        store = get_activity_store()
+
+        entry = {'skill_query': text, 'status': 'sending'}
+        self.activity_log.append(entry)
+        if ctx:
+            store.append(ctx, {'skill_query': text, 'status': 'sending'})
 
         try:
             async with httpx.AsyncClient(timeout=15.0) as http:
@@ -76,16 +84,19 @@ class TravelProviderClient:
                 response = await client.send_message(request=request)
                 result = self._parse_response(response)
 
-                # Store context_id from provider for subsequent calls
                 if result.get('context_id'):
                     self.context_id = result['context_id']
 
                 self.activity_log[-1]['status'] = 'completed'
                 self.activity_log[-1]['response_preview'] = result['text'][:100]
+                if ctx:
+                    store.update_by_query(ctx, text, {'status': 'completed', 'response_preview': result['text'][:100]})
                 return result
         except Exception as e:
             self.activity_log[-1]['status'] = 'error'
             self.activity_log[-1]['error'] = str(e)
+            if ctx:
+                store.update_by_query(ctx, text, {'status': 'error', 'error': str(e)})
             return {'text': f'Error communicating with provider: {e}', 'data': {}, 'context_id': None}
 
     def _parse_response(self, response) -> dict:
@@ -95,13 +106,11 @@ class TravelProviderClient:
         data: dict = {}
         context_id: str | None = None
 
-        # Extract context_id
         if hasattr(result, 'contextId'):
             context_id = result.contextId
         elif hasattr(result, 'context_id'):
             context_id = result.context_id
 
-        # Try artifacts first (completed tasks)
         if hasattr(result, 'artifacts') and result.artifacts:
             for artifact in result.artifacts:
                 for part in artifact.parts:
@@ -111,7 +120,6 @@ class TravelProviderClient:
                     if hasattr(root, 'data'):
                         data.update(root.data if isinstance(root.data, dict) else {})
 
-        # Fall back to status message
         if not texts and hasattr(result, 'status') and result.status and result.status.message:
             msg = result.status.message
             for part in msg.parts:
@@ -119,7 +127,6 @@ class TravelProviderClient:
                 if hasattr(root, 'text'):
                     texts.append(root.text)
 
-        # Fall back to history
         if not texts and hasattr(result, 'history') and result.history:
             for msg in reversed(result.history):
                 if msg.role == 'agent':

@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 from agent import invoke_agent
 from tools import get_client
+from activity_store import get_activity_store
 
 app = FastAPI(title='Travel Consumer Agent', version='1.0.0')
 
@@ -58,12 +59,21 @@ class MessageResponse(BaseModel):
 @app.post('/message', response_model=MessageResponse)
 async def handle_message(req: MessageRequest):
     context_id = req.context_id or uuid4().hex
+    store = get_activity_store()
+    store.init_context(context_id)
     result = await invoke_agent(req.text, context_id)
     return MessageResponse(
         response=result['response'],
         context_id=context_id,
         activity_log=result['activity_log'],
     )
+
+
+@app.get('/activity/{context_id}')
+async def get_activity(context_id: str):
+    """Get live activity log for an in-progress request. Does NOT clear the log."""
+    store = get_activity_store()
+    return store.get(context_id)
 
 
 @app.get('/health')
