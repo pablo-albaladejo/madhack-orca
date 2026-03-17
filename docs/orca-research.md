@@ -1,17 +1,21 @@
-# Orca — Platform Research
+# Orca (formerly Lexia) — Platform Research
 
 > **Last updated:** 2026-03-17
 
 ## What is Orca?
 
-**Orca** is an enterprise AI agent platform. It positions itself as enabling organizations to "construct your internal AI labor force" — custom AI agents with enterprise-grade security, GDPR compliance, and built-in guardrails.
+**Orca** is the new name for **Lexia**, an AI agent platform built by **XALANTICO SL** (Madrid, Spain). It describes itself as "The Complete AI Agent Platform" — a safe, plug-and-play interface for AI agents with tools for testing, deployment, and presentation without DevOps overhead.
 
-- **Main site:** <https://orcaplatform.ai/> (also <https://orcaplatform.ai/es/> in Spanish)
-- **Status:** Website is marketing-only — no public technical docs as of March 2026.
+- **New site:** <https://orcaplatform.ai/> (also <https://orcaplatform.ai/es/> in Spanish)
+- **Old site:** <https://lexiaplatform.com/>
+- **Company:** XALANTICO SL (CIF: B01904523, CNAE 6201)
+- **Status:** Rebranded from Lexia to Orca. New site is marketing-only with no technical docs.
 
-> **Important:** No public SDK, API docs, CLI, or GitHub repos were found for Orca as of March 2026. The hackathon promises a "starter boilerplate repo with Orca integration" will be provided at the event (March 18).
+> **Important:** No public SDK, API docs, or GitHub repos were found for Orca/Lexia. The hackathon promises a "starter boilerplate repo with Orca integration" will be provided at the event (March 18).
 
-## Platform Features (from orcaplatform.ai)
+## Platform Features
+
+### From orcaplatform.ai (current)
 
 - **Custom AI agent development and deployment**
 - **Enterprise security**: GDPR compliance, built-in guardrails, data stays under user control
@@ -19,6 +23,48 @@
 - **Deployment**: Sandbox (free, no credit card) → stack integration → production with auto-scaling
 - **Pricing**: Token-based ("pay for what you use"), no per-seat licensing
 - **Demo request**: <https://orcaplatform.ai/es/registration>
+
+### From lexiaplatform.com (old branding, may still apply)
+
+#### Developer Tools
+
+- **Lexia CLI:**
+  ```bash
+  lexia init my-agent              # Initialize a new agent
+  lexia dev my-agent --port=5000   # Run locally for testing
+  lexia deploy my-agent --env=prod # Deploy to production
+  lexia db create my-db --type=postgres  # Provision database
+  ```
+- AI SDK for agent development
+- Native Components for rich content (images, charts, tables, video)
+- Widget and Native Mobile App integration
+
+#### Infrastructure
+
+- Relational DB provisioning (Postgres/MySQL) via CLI
+- Vector DB with HNSW index and filters
+- S3-compatible cloud storage with RLS policies
+- In-Memory DB
+- Agent CI/CD pipeline
+- Edge caching and Global CDN
+- WebSocket support
+- Automatic container provisioning, load balancing, security policies, and scaling
+
+#### Safety & Observability
+
+- Customizable guardrails (text, voice, documents, images)
+- Tracing, Insights, and Observability tools
+- Enterprise-grade encryption, SOC2/GDPR compliance
+
+#### Pricing (from Lexia site)
+
+| Plan       | Cost            | Agents    | Storage |
+|------------|-----------------|-----------|---------|
+| Sandbox    | Free            | 3         | 1GB     |
+| Pro        | EUR 12/month    | 25        | 100GB   |
+| Small      | EUR 49/month    | 50        | 500GB   |
+| Scale      | Custom          | Unlimited | 1TB     |
+| Enterprise | Custom          | Unlimited | Custom  |
 
 ---
 
@@ -172,9 +218,9 @@ app.listen(4000);
 
 ## Known Gaps
 
-- **No public SDK, CLI, or API docs** — orcaplatform.ai has zero developer-facing documentation
-- **No public GitHub repos** for Orca source code or boilerplate
-- **No mention of A2A protocol** on the Orca website — the A2A integration is hackathon-specific
+- **No public Orca SDK, CLI, or API docs** — neither orcaplatform.ai nor lexiaplatform.com have developer-facing documentation
+- **No public GitHub repos** for Orca/Lexia source code or boilerplate
+- **No mention of A2A protocol** on either Orca website — the A2A integration is hackathon-specific
 - The hackathon will provide a **starter boilerplate repo** at the event (March 18, 19:00)
 - **Nomu Labs** (<https://www.nomulabs.com/en>) is a Madrid-based product studio co-organizing the hackathon
 
