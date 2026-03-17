@@ -10,6 +10,7 @@
       "Bash",
       "WebSearch",
       "WebFetch",
+      "Skills",
       "mcp__playwright__*",
       "mcp__vitest__*",
       "mcp__context7__*",
