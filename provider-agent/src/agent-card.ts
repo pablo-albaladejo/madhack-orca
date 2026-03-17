@@ -1,0 +1,84 @@
+import type { AgentCard } from '@a2a-js/sdk'
+
+export const agentCard: AgentCard = {
+  name: 'Travel Provider',
+  description: 'A travel assistant that provides weather forecasts, flight search, hotel booking, restaurant recommendations, and activity suggestions for European cities.',
+  url: 'http://localhost:3000/',
+  version: '1.0.0',
+  protocolVersion: '0.3',
+  capabilities: {
+    streaming: false,
+    pushNotifications: false,
+    stateTransitionHistory: false,
+  },
+  defaultInputModes: ['text'],
+  defaultOutputModes: ['text', 'data'],
+  skills: [
+    {
+      id: 'weather',
+      name: 'Weather Forecast',
+      description: 'Get weather forecasts for European cities. Returns temperature, conditions, humidity, and wind for the next 2-3 days.',
+      tags: ['weather', 'forecast', 'clima', 'temperature', 'rain'],
+      examples: [
+        'What is the weather in Barcelona this weekend?',
+        'Weather forecast for Madrid',
+        'Will it rain in Lisbon tomorrow?',
+      ],
+      inputModes: ['text'],
+      outputModes: ['text', 'data'],
+    },
+    {
+      id: 'flights',
+      name: 'Flight Search',
+      description: 'Search for flights between European cities. Supports one-way flight search with pricing in EUR. Can also book flights.',
+      tags: ['flight', 'flights', 'vuelo', 'fly', 'airplane', 'book flight'],
+      examples: [
+        'Flights from Madrid to Barcelona on Friday',
+        'Find cheap flights from Lisbon to Paris',
+        'Book flight IB1234 from Madrid to Barcelona',
+      ],
+      inputModes: ['text'],
+      outputModes: ['text', 'data'],
+    },
+    {
+      id: 'hotels',
+      name: 'Hotel Search & Booking',
+      description: 'Search hotels in European cities, book rooms, or cancel reservations. Returns hotel details with pricing, stars, and amenities.',
+      tags: ['hotel', 'hotels', 'accommodation', 'book hotel', 'cancel hotel', 'booking', 'hostel', 'stay'],
+      examples: [
+        'Hotels in Barcelona',
+        'Book Hotel Gotic in Barcelona for March 20-22',
+        'Cancel reservation HTL-20260318-A1B2',
+      ],
+      inputModes: ['text'],
+      outputModes: ['text', 'data'],
+    },
+    {
+      id: 'restaurants',
+      name: 'Restaurant Search',
+      description: 'Find restaurants in European cities. Returns name, rating, price level, address, and cuisine type.',
+      tags: ['restaurant', 'restaurants', 'food', 'dining', 'eat', 'comer', 'comida'],
+      examples: [
+        'Restaurants in Barcelona Gothic Quarter',
+        'Best restaurants in Madrid near Sol',
+        'Where to eat in Lisbon',
+      ],
+      inputModes: ['text'],
+      outputModes: ['text', 'data'],
+    },
+    {
+      id: 'activities',
+      name: 'Activities & Attractions',
+      description: 'Discover museums, tourist attractions, tours, and things to do in European cities.',
+      tags: ['activities', 'activity', 'museum', 'attractions', 'tours', 'things to do', 'sightseeing', 'visit', 'que hacer'],
+      examples: [
+        'Activities in Barcelona',
+        'Museums in Madrid',
+        'Things to do in Lisbon',
+      ],
+      inputModes: ['text'],
+      outputModes: ['text', 'data'],
+    },
+  ],
+  supportsAuthenticatedExtendedCard: false,
+}

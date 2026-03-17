@@ -1,0 +1,8 @@
+a2a-sdk
+langgraph
+langchain-anthropic
+langchain-core
+python-dotenv
+fastapi
+uvicorn[standard]
+httpx
