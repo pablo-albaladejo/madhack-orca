@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 
 from langchain_anthropic import ChatAnthropic
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 
-from tools import ALL_TOOLS, get_client
+from tools import ALL_TOOLS, get_client, set_context_id
+
+# Maximum seconds to wait for the full agent invocation (LLM + tool calls).
+# Prevents the demo from hanging if the LLM or provider stalls.
+AGENT_TIMEOUT_SECONDS = int(os.environ.get('AGENT_TIMEOUT', '90'))
 
 SYSTEM_PROMPT = """You are a travel planning assistant. You MUST call tools immediately — NEVER ask clarifying questions.
 
@@ -20,6 +25,8 @@ When the user mentions a destination, IMMEDIATELY call ALL of these tools (do no
 - search_activities(destination)
 
 If the user doesn't specify origin city, assume Madrid. If no date, assume this coming weekend.
+
+CRITICAL: Call tools ONCE. Never call a tool a second time to "refine" or "get more details". Use whatever results you get on the first round — they are complete.
 
 After gathering results, compose a day-by-day itinerary:
 - Outdoor activities on sunny days, indoor (museums, shopping) when rain
@@ -67,10 +74,22 @@ async def invoke_agent(text: str, context_id: str) -> dict:
         dict with 'response' (str) and 'activity_log' (list).
     """
     agent = get_agent()
+    set_context_id(context_id)
     config = {'configurable': {'thread_id': context_id}}
     inputs = {'messages': [('user', text)]}
 
-    result = await agent.ainvoke(inputs, config)
+    try:
+        result = await asyncio.wait_for(
+            agent.ainvoke(inputs, config),
+            timeout=AGENT_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        client = get_client()
+        activity_log = client.get_activity_log()
+        return {
+            'response': 'Sorry, the request took too long. Please try again with a simpler query.',
+            'activity_log': activity_log,
+        }
 
     # Extract the final AI message
     last_message = result['messages'][-1]

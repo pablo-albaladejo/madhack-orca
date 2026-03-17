@@ -11,6 +11,9 @@ from a2a_client import TravelProviderClient
 # Shared client instance
 _client: TravelProviderClient | None = None
 
+# Current conversation context_id (set before invoking agent)
+_context_id: str | None = None
+
 
 def get_client() -> TravelProviderClient:
     """Get or create the shared TravelProviderClient."""
@@ -21,6 +24,14 @@ def get_client() -> TravelProviderClient:
     return _client
 
 
+def set_context_id(context_id: str | None):
+    """Set the A2A contextId for the current conversation."""
+    global _context_id
+    _context_id = context_id
+    client = get_client()
+    client.context_id = context_id
+
+
 def _compact(text: str) -> str:
     """Strip excessive whitespace from provider responses to save tokens."""
     lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
@@ -29,49 +40,49 @@ def _compact(text: str) -> str:
 
 @tool
 async def search_weather(query: str) -> str:
-    """Search weather forecast for a destination. Include city name in your query."""
+    """Search weather forecast. Input: '{city} this weekend'. Example: 'Barcelona this weekend'. Returns 3-day forecast with temperature and conditions."""
     client = get_client()
-    result = await client.send(f'weather {query}')
+    result = await client.send(f'weather {query}', context_id=_context_id)
     return _compact(result['text'])
 
 
 @tool
 async def search_flights(query: str) -> str:
-    """Search flights between cities. Include origin, destination, and date."""
+    """Search flights. Input: 'from {origin} to {destination} on {day}'. Example: 'from Madrid to Barcelona on Friday'. Returns flights with prices and times."""
     client = get_client()
-    result = await client.send(f'flights {query}')
+    result = await client.send(f'flights {query}', context_id=_context_id)
     return _compact(result['text'])
 
 
 @tool
 async def search_hotels(query: str) -> str:
-    """Search hotels in a destination. Include city name."""
+    """Search hotels. Input: '{city}'. Example: 'Barcelona'. Returns hotels with prices, stars, and neighborhoods."""
     client = get_client()
-    result = await client.send(f'hotels {query}')
+    result = await client.send(f'hotels {query}', context_id=_context_id)
     return _compact(result['text'])
 
 
 @tool
 async def book_hotel(query: str) -> str:
-    """Book a specific hotel. Include hotel name and city."""
+    """Book a hotel. Input: '{hotel name} in {city}'. Example: 'Hotel Gotic in Barcelona'. Returns booking confirmation number."""
     client = get_client()
-    result = await client.send(f'book hotel {query}')
+    result = await client.send(f'book hotel {query}', context_id=_context_id)
     return _compact(result['text'])
 
 
 @tool
 async def search_restaurants(query: str) -> str:
-    """Search restaurants in a destination. Include city name."""
+    """Search restaurants. Input: '{city}'. Example: 'Barcelona'. Returns restaurants with ratings, prices, and addresses."""
     client = get_client()
-    result = await client.send(f'restaurants {query}')
+    result = await client.send(f'restaurants {query}', context_id=_context_id)
     return _compact(result['text'])
 
 
 @tool
 async def search_activities(query: str) -> str:
-    """Search activities and attractions in a destination. Include city name."""
+    """Search activities and attractions. Input: '{city}'. Example: 'Barcelona'. Returns museums, attractions, and tours with ratings."""
     client = get_client()
-    result = await client.send(f'activities {query}')
+    result = await client.send(f'activities {query}', context_id=_context_id)
     return _compact(result['text'])
 
 

@@ -17,8 +17,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agent import invoke_agent
+from tools import get_client
 
 app = FastAPI(title='Travel Consumer Agent', version='1.0.0')
+
+
+@app.on_event('startup')
+async def _check_provider():
+    """Verify provider is reachable at startup. Warns but does not block."""
+    provider_url = os.environ.get('PROVIDER_URL', 'http://localhost:3000')
+    try:
+        skills = await get_client().discover()
+        skill_names = [s['name'] for s in skills]
+        print(f'\n  Provider connected: {provider_url}')
+        print(f'  Skills discovered: {", ".join(skill_names)}\n')
+    except Exception as e:
+        print(f'\n  WARNING: Provider not reachable at {provider_url}: {e}')
+        print(f'  Start the provider first: cd provider-agent && npm run dev\n')
 
 app.add_middleware(
     CORSMiddleware,
@@ -53,7 +68,23 @@ async def handle_message(req: MessageRequest):
 
 @app.get('/health')
 async def health():
-    return {'status': 'ok'}
+    """Health check that also verifies provider connectivity."""
+    provider_url = os.environ.get('PROVIDER_URL', 'http://localhost:3000')
+    try:
+        skills = await get_client().discover()
+        return {
+            'status': 'ok',
+            'provider': provider_url,
+            'provider_status': 'connected',
+            'skills': len(skills),
+        }
+    except Exception:
+        return {
+            'status': 'degraded',
+            'provider': provider_url,
+            'provider_status': 'unreachable',
+            'skills': 0,
+        }
 
 
 if __name__ == '__main__':

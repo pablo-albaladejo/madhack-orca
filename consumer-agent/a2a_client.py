@@ -12,23 +12,31 @@ from a2a.types import MessageSendParams, SendMessageRequest
 class TravelProviderClient:
     """Wraps A2A protocol communication with the travel provider agent.
 
-    Creates a fresh httpx.AsyncClient per send() call to avoid event loop
-    conflicts when LangGraph runs tools in parallel threads.
+    Caches the agent card to avoid re-resolving on every call.
+    Creates a fresh httpx.AsyncClient per send() for thread safety.
     """
 
     def __init__(self, base_url: str = 'http://localhost:3000'):
         self.base_url = base_url
         self._skills: list[dict] = []
+        self._agent_card = None
         self.activity_log: list[dict] = []
+        self.context_id: str | None = None
 
-    async def discover(self) -> list[dict]:
-        """Fetch agent card and return available skills."""
-        async with httpx.AsyncClient(timeout=30.0) as http:
+    async def _get_agent_card(self, http: httpx.AsyncClient):
+        """Fetch or return cached agent card."""
+        if self._agent_card is None:
             resolver = A2ACardResolver(
                 httpx_client=http,
                 base_url=self.base_url,
             )
-            card = await resolver.get_agent_card()
+            self._agent_card = await resolver.get_agent_card()
+        return self._agent_card
+
+    async def discover(self) -> list[dict]:
+        """Fetch agent card and return available skills."""
+        async with httpx.AsyncClient(timeout=15.0) as http:
+            card = await self._get_agent_card(http)
             self._skills = [
                 {'id': s.id, 'name': s.name, 'description': s.description}
                 for s in card.skills
@@ -38,18 +46,15 @@ class TravelProviderClient:
     async def send(self, text: str, context_id: str | None = None) -> dict:
         """Send a message to the provider via A2A message/send.
 
-        Creates a fresh httpx client per call — safe across threads/event loops.
-        Returns dict with 'text', 'data', and 'context_id' keys.
+        Uses cached agent card. Creates fresh httpx client for thread safety.
         """
+        # Use provided context_id, or fall back to stored one
+        ctx = context_id or self.context_id
         self.activity_log.append({'skill_query': text, 'status': 'sending'})
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as http:
-                resolver = A2ACardResolver(
-                    httpx_client=http,
-                    base_url=self.base_url,
-                )
-                card = await resolver.get_agent_card()
+            async with httpx.AsyncClient(timeout=15.0) as http:
+                card = await self._get_agent_card(http)
                 client = A2AClient(httpx_client=http, agent_card=card)
 
                 message_id = uuid4().hex
@@ -60,8 +65,8 @@ class TravelProviderClient:
                         'messageId': message_id,
                     },
                 }
-                if context_id:
-                    payload['message']['contextId'] = context_id
+                if ctx:
+                    payload['message']['contextId'] = ctx
 
                 request = SendMessageRequest(
                     id=str(uuid4()),
@@ -70,6 +75,11 @@ class TravelProviderClient:
 
                 response = await client.send_message(request=request)
                 result = self._parse_response(response)
+
+                # Store context_id from provider for subsequent calls
+                if result.get('context_id'):
+                    self.context_id = result['context_id']
+
                 self.activity_log[-1]['status'] = 'completed'
                 self.activity_log[-1]['response_preview'] = result['text'][:100]
                 return result
