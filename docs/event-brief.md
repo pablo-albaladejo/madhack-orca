@@ -47,4 +47,4 @@ All agents integrate through **Orca** orchestration during final demos.
 
 ## Organizers
 
-Pitchless Community, Nomu Labs, Tech Brunch, Orca (formerly Lexia)
+Pitchless Community, Nomu Labs, Tech Brunch, Orca
