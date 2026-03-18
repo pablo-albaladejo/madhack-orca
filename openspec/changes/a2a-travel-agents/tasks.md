@@ -34,13 +34,13 @@
 
 ### Provider Agent (TS Dev)
 
-- [ ] **T1.1** Scaffold provider project (10 min)
+- [x] **T1.1** Scaffold provider project (10 min)
   - Init `provider-agent/` with package.json, tsconfig.json
   - Configure ES modules, strict mode, single quotes, no semicolons
   - Add npm scripts: `"dev": "tsx watch src/index.ts"`
   - **Files**: `package.json`, `tsconfig.json`
 
-- [ ] **T1.2** Define agent card with 5 skills (10 min)
+- [x] **T1.2** Define agent card with 5 skills (10 min)
   - Create `src/agent-card.ts` with AgentCard object
   - 5 skills: weather, restaurants, flights, hotels, booking
   - URL: `http://localhost:3000/`
@@ -48,20 +48,20 @@
   - **Files**: `src/agent-card.ts`
   - **Verify**: `curl http://localhost:3000/.well-known/agent-card.json`
 
-- [ ] **T1.3** Create TravelExecutor with routing (15 min)
+- [x] **T1.3** Create TravelExecutor with routing (15 min)
   - Single executor class implementing AgentExecutor interface
   - Keyword-based routing: parse message text → route to skill handler
   - Return task with text artifact for each skill result
   - **Files**: `src/executor.ts`
 
-- [ ] **T1.4** Implement weather skill with Open-Meteo (15 min)
+- [x] **T1.4** Implement weather skill with Open-Meteo (15 min)
   - `src/skills/geocoding.ts`: city name → lat/lon via Nominatim
   - `src/skills/weather.ts`: lat/lon → forecast via Open-Meteo
   - Format response as readable text (temperature, conditions, forecast)
   - **Files**: `src/skills/geocoding.ts`, `src/skills/weather.ts`
   - **Verify**: Send A2A message "weather in Madrid" → get real forecast
 
-- [ ] **T1.5** Wire Express app + A2A handler (10 min)
+- [x] **T1.5** Wire Express app + A2A handler (10 min)
   - `src/index.ts`: Express app with DefaultRequestHandler
   - Mount JSON-RPC endpoint at `/`
   - Agent card served at `/.well-known/agent-card.json`
@@ -70,31 +70,31 @@
 
 ### Consumer Agent (Python Dev)
 
-- [ ] **T1.6** Scaffold consumer project (10 min)
+- [x] **T1.6** Scaffold consumer project (10 min)
   - Init `consumer-agent/` with requirements.txt, main.py
   - Set up venv, install dependencies
   - **Files**: `requirements.txt`, `main.py`
 
-- [ ] **T1.7** Create send_to_agent tool (15 min)
+- [x] **T1.7** Create send_to_agent tool (15 min)
   - `tools.py`: A2AClient wrapper as LangChain tool
   - Discovers provider via A2ACardResolver
   - Sends message/send, extracts text from response
   - **Files**: `tools.py`
 
-- [ ] **T1.8** Create LangGraph agent (15 min)
+- [x] **T1.8** Create LangGraph agent (15 min)
   - `agent.py`: create_react_agent with gpt-4o-mini
   - System prompt <200 tokens (list available skills)
   - Wire send_to_agent as the only tool
   - **Files**: `agent.py`
 
-- [ ] **T1.9** Add A2A logging middleware (10 min)
+- [x] **T1.9** Add A2A logging middleware (10 min)
   - `logging_middleware.py`: colored stdout output for each A2A call
   - Format: `[HH:MM:SS] → Provider message/send "..."`
   - Format: `[HH:MM:SS] ← Provider completed "..."`
   - ANSI colors: green for outgoing, blue for incoming
   - **Files**: `logging_middleware.py`
 
-- [ ] **T1.10** Wire main.py entry point (10 min)
+- [x] **T1.10** Wire main.py entry point (10 min)
   - Discovery on startup: resolve provider agent card
   - Accept user input from stdin (simple REPL)
   - Run LangGraph agent with user message
@@ -112,28 +112,28 @@
   - Debug any cross-language issues (Part structure, response parsing)
   - **Owner**: Both devs together
 
-- [ ] **T2.2** Implement restaurants skill (10 min)
+- [x] **T2.2** Implement restaurants skill (10 min)
   - `src/skills/restaurants.ts`: Overpass API query for restaurants by city
   - Uses geocoding to get city area, queries amenity=restaurant
   - Returns top 10 restaurants with names
   - **Owner**: TS dev
   - **Files**: `src/skills/restaurants.ts`
 
-- [ ] **T2.3** Implement flights mock (5 min)
+- [x] **T2.3** Implement flights mock (5 min)
   - `src/skills/flights.ts`: parameterized mock returning realistic flight data
   - Different results per city pair (BCN→MAD, LON→MAD, etc.)
   - Include airline, price, departure time
   - **Owner**: TS dev
   - **Files**: `src/skills/flights.ts`
 
-- [ ] **T2.4** Implement hotels mock (5 min)
+- [x] **T2.4** Implement hotels mock (5 min)
   - `src/skills/hotels.ts`: parameterized mock returning hotel data
   - Different results per city (Madrid, Barcelona, etc.)
   - Include hotel name, price per night, rating
   - **Owner**: TS dev
   - **Files**: `src/skills/hotels.ts`
 
-- [ ] **T2.5** Implement booking skill — CRUD (15 min)
+- [x] **T2.5** Implement booking skill — CRUD (15 min)
   - `src/skills/booking.ts`: in-memory booking store
   - **Book**: receives flight/hotel ID + passengers → generates confirmation ID (CONF-XXXXX) → stores in Map
   - **Cancel**: receives confirmation ID → removes from Map → returns cancellation confirmation
