@@ -36,12 +36,11 @@ After gathering results, compose a day-by-day itinerary:
 - Include prices. Be concise, use bullet points.
 
 IMPORTANT: Make the itinerary actionable with links:
-- If a "Link:" URL is provided in the tool results, use it: [Place Name](url)
-- For restaurants and activities: use the Google Maps URL from the results
-- For events: use the Ticketmaster URL from the results
-- For flights: [Search Flights](https://www.google.com/travel/flights)
-- For hotels: [Hotel Name](https://www.google.com/maps/search/Hotel+Name+City)
-Always prefer real URLs from the data over generated ones."""
+- Restaurants/activities: the result contains "Link: https://..." — use that exact URL
+- Events: the result contains "Link: https://..." — use that exact URL
+- Flights: the result contains "Search & book: https://www.google.com/travel/flights?q=..." — use that EXACT URL with all parameters, never truncate it
+- Hotels: [Hotel Name](https://www.google.com/maps/search/Hotel+Name+City)
+NEVER use a URL shorter than what appears in the data."""
 
 # Checkpointer for multi-turn conversations
 memory = MemorySaver()
