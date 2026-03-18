@@ -231,9 +231,10 @@ export const flightsHandler: SkillHandler = async (message) => {
         .map(f => `  ${f.airline} ${f.flight_number}: ${f.departure}-${f.arrival} (${f.duration}) - ${f.price} EUR`)
         .join('\n')
 
+      const searchUrl = `https://www.google.com/travel/flights?q=flights+from+${originCode}+to+${destCode}+on+${date}`
       return {
-        text: `Flights from ${displayOrigin} (${originCode}) to ${displayDest} (${destCode}) on ${date}:\n${summary}`,
-        data: { origin: originCode, destination: destCode, date, flights },
+        text: `Flights from ${displayOrigin} (${originCode}) to ${displayDest} (${destCode}) on ${date}:\n${summary}\nSearch & book: ${searchUrl}`,
+        data: { origin: originCode, destination: destCode, date, flights, search_url: searchUrl },
       }
     } catch (err) {
       console.warn(`SerpAPI error, falling back to mock data: ${err}`)
@@ -252,8 +253,9 @@ export const flightsHandler: SkillHandler = async (message) => {
     .map(f => `  ${f.airline} ${f.flight_number}: ${f.departure}-${f.arrival} (${f.duration}) - ${f.price} EUR`)
     .join('\n')
 
+  const searchUrl = `https://www.google.com/travel/flights?q=flights+from+${originCode}+to+${destCode}+on+${date}`
   return {
-    text: `Flights from ${displayOrigin} (${originCode}) to ${displayDest} (${destCode}) on ${date}:\n${summary}`,
-    data: { origin: originCode, destination: destCode, date, flights },
+    text: `Flights from ${displayOrigin} (${originCode}) to ${displayDest} (${destCode}) on ${date}:\n${summary}\nSearch & book: ${searchUrl}`,
+    data: { origin: originCode, destination: destCode, date, flights, search_url: searchUrl },
   }
 }
