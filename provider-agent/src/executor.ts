@@ -76,8 +76,8 @@ export class TravelAgentExecutor implements AgentExecutor {
       final: false,
     } as TaskStatusUpdateEvent)
 
-    // Route to skill handler
-    const match = routeMessage(userText)
+    // Route to skill handler (LLM-based with keyword fallback)
+    const match = await routeMessage(userText)
 
     if (!match) {
       console.log(`${YELLOW}[A2A]${RESET} No skill matched, returning help message`)

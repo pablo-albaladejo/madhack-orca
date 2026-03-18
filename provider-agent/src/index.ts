@@ -24,13 +24,13 @@ const __dirname = dirname(__filename)
 config({ path: resolve(__dirname, '../.env') })
 config({ path: resolve(__dirname, '../../.env') })
 
-// Register skills with router
-registerSkill('weather', ['weather', 'forecast', 'clima', 'temperature', 'rain', 'sunny'], weatherHandler)
-registerSkill('flights', ['flight', 'flights', 'vuelo', 'fly', 'airplane', 'book flight'], flightsHandler)
-registerSkill('hotels', ['hotel', 'hotels', 'accommodation', 'book hotel', 'cancel hotel', 'booking', 'hostel', 'stay'], hotelsHandler)
-registerSkill('restaurants', ['restaurant', 'restaurants', 'food', 'dining', 'eat', 'comer', 'comida'], restaurantsHandler)
-registerSkill('activities', ['activit', 'museum', 'attraction', 'tours', 'things to do', 'sightseeing', 'visit', 'que hacer'], activitiesHandler)
-registerSkill('events', ['event', 'events', 'concert', 'show', 'teatro', 'espectaculo', 'match', 'ticket'], eventsHandler)
+// Register skills with router (LLM uses descriptions, keywords are fallback)
+registerSkill('weather', ['weather', 'forecast', 'clima', 'temperature', 'rain', 'sunny'], weatherHandler, 'Weather forecasts for cities (temperature, rain, wind)')
+registerSkill('flights', ['flight', 'flights', 'vuelo', 'fly', 'airplane', 'book flight'], flightsHandler, 'Flight search between cities with prices, and flight booking')
+registerSkill('hotels', ['hotel', 'hotels', 'accommodation', 'book hotel', 'cancel hotel', 'booking', 'hostel', 'stay'], hotelsHandler, 'Hotel search, booking, and cancellation')
+registerSkill('restaurants', ['restaurant', 'restaurants', 'food', 'dining', 'eat', 'comer', 'comida'], restaurantsHandler, 'Restaurant search with ratings and cuisine types')
+registerSkill('activities', ['activit', 'museum', 'attraction', 'tours', 'things to do', 'sightseeing', 'visit', 'que hacer'], activitiesHandler, 'Museums, tourist attractions, tours, and things to do')
+registerSkill('events', ['event', 'events', 'concert', 'show', 'teatro', 'espectaculo', 'match', 'ticket'], eventsHandler, 'Upcoming events, concerts, sports matches, and theatre shows')
 
 // ANSI colors
 const CYAN = '\x1b[36m'
