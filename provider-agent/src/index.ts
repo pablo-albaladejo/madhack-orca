@@ -18,9 +18,10 @@ import { restaurantsHandler } from './skills/restaurants.js'
 import { activitiesHandler } from './skills/activities.js'
 import { eventsHandler } from './skills/events.js'
 
-// Load .env from parent directory
+// Load .env — try local first (Railway), then parent directory (local dev)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+config({ path: resolve(__dirname, '../.env') })
 config({ path: resolve(__dirname, '../../.env') })
 
 // Register skills with router

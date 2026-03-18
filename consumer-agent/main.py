@@ -8,9 +8,10 @@ from uuid import uuid4
 
 from dotenv import load_dotenv
 
-# Load .env from project root (parent of consumer-agent/)
-_env_path = Path(__file__).resolve().parent.parent / '.env'
-load_dotenv(dotenv_path=_env_path)
+# Load .env — try local first (Railway), then parent directory (local dev)
+_base = Path(__file__).resolve().parent
+load_dotenv(dotenv_path=_base / '.env')
+load_dotenv(dotenv_path=_base.parent / '.env')
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -100,4 +101,5 @@ async def health():
 if __name__ == '__main__':
     import uvicorn
     port = int(os.environ.get('PORT', '8000'))
-    uvicorn.run('main:app', host='0.0.0.0', port=port, reload=True)
+    reload = os.environ.get('RAILWAY_ENVIRONMENT') is None
+    uvicorn.run('main:app', host='0.0.0.0', port=port, reload=reload)

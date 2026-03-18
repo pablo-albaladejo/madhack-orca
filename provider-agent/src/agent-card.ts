@@ -1,9 +1,11 @@
 import type { AgentCard } from '@a2a-js/sdk'
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000/'
+
 export const agentCard: AgentCard = {
   name: 'Travel Provider',
   description: 'A travel assistant that provides weather forecasts, flight search, hotel booking, restaurant recommendations, activity suggestions, and live event listings for European cities.',
-  url: 'http://localhost:3000/',
+  url: BASE_URL,
   version: '1.0.0',
   protocolVersion: '0.3',
   capabilities: {
