@@ -71,6 +71,14 @@ async def book_hotel(query: str) -> str:
 
 
 @tool
+async def cancel_hotel(confirmation_code: str) -> str:
+    """Cancel a hotel booking. Input: the confirmation code. Example: 'HTL-20260318-BJ6V'. Returns cancellation confirmation."""
+    client = get_client()
+    result = await client.send(f'cancel hotel {confirmation_code}', context_id=_context_id)
+    return _compact(result['text'])
+
+
+@tool
 async def search_restaurants(query: str) -> str:
     """Search restaurants. Input: '{city}'. Example: 'Barcelona'. Returns restaurants with ratings, prices, and addresses."""
     client = get_client()
@@ -99,6 +107,7 @@ ALL_TOOLS = [
     search_flights,
     search_hotels,
     book_hotel,
+    cancel_hotel,
     search_restaurants,
     search_activities,
     search_events,
