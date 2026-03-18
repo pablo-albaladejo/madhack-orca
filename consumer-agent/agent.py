@@ -33,7 +33,13 @@ CRITICAL: Call tools ONCE. Never call a tool a second time to "refine" or "get m
 After gathering results, compose a day-by-day itinerary:
 - Outdoor activities on sunny days, indoor (museums, shopping) when rain
 - Restaurant suggestions for each meal
-- Include prices. Be concise, use bullet points."""
+- Include prices. Be concise, use bullet points.
+
+IMPORTANT: For every place, restaurant, activity, or venue you mention, include a Google Maps link:
+[Place Name](https://www.google.com/maps/search/Place+Name+City)
+For flights, link to Google Flights:
+[Flight](https://www.google.com/travel/flights)
+This makes the itinerary actionable."""
 
 # Checkpointer for multi-turn conversations
 memory = MemorySaver()
