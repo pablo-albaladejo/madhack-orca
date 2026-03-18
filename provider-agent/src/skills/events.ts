@@ -10,31 +10,32 @@ interface EventEntry {
   price_max: number | null
   currency: string
   category: string
+  url?: string
 }
 
 const MOCK_DATA: Record<string, EventEntry[]> = {
   madrid: [
-    { name: 'Real Madrid vs Atlético Madrid', venue: 'Santiago Bernabéu', date: '2026-03-20', time: '21:00', price_min: 45, price_max: 195, currency: 'EUR', category: 'Sports' },
-    { name: 'Rosalía - Motomami World Tour', venue: 'WiZink Center', date: '2026-03-21', time: '20:30', price_min: 35, price_max: 120, currency: 'EUR', category: 'Music' },
-    { name: 'El Fantasma de la Ópera', venue: 'Teatro Lope de Vega', date: '2026-03-20', time: '20:00', price_min: 25, price_max: 85, currency: 'EUR', category: 'Arts & Theatre' },
+    { name: 'Real Madrid vs Atlético Madrid', venue: 'Santiago Bernabéu', date: '2026-03-20', time: '21:00', price_min: 45, price_max: 195, currency: 'EUR', category: 'Sports', url: 'https://www.google.com/maps/search/Santiago+Bernabéu+Madrid' },
+    { name: 'Rosalía - Motomami World Tour', venue: 'WiZink Center', date: '2026-03-21', time: '20:30', price_min: 35, price_max: 120, currency: 'EUR', category: 'Music', url: 'https://www.google.com/maps/search/WiZink+Center+Madrid' },
+    { name: 'El Fantasma de la Ópera', venue: 'Teatro Lope de Vega', date: '2026-03-20', time: '20:00', price_min: 25, price_max: 85, currency: 'EUR', category: 'Arts & Theatre', url: 'https://www.google.com/maps/search/Teatro+Lope+de+Vega+Madrid' },
   ],
   barcelona: [
-    { name: 'FC Barcelona vs Real Sociedad', venue: 'Spotify Camp Nou', date: '2026-03-21', time: '21:00', price_min: 55, price_max: 250, currency: 'EUR', category: 'Sports' },
-    { name: 'Coldplay - Music of the Spheres', venue: 'Estadi Olímpic', date: '2026-03-20', time: '21:00', price_min: 65, price_max: 180, currency: 'EUR', category: 'Music' },
-    { name: 'Flamenco Night', venue: 'Palau de la Música', date: '2026-03-20', time: '19:30', price_min: 30, price_max: 60, currency: 'EUR', category: 'Arts & Theatre' },
+    { name: 'FC Barcelona vs Real Sociedad', venue: 'Spotify Camp Nou', date: '2026-03-21', time: '21:00', price_min: 55, price_max: 250, currency: 'EUR', category: 'Sports', url: 'https://www.google.com/maps/search/Camp+Nou+Barcelona' },
+    { name: 'Coldplay - Music of the Spheres', venue: 'Estadi Olímpic', date: '2026-03-20', time: '21:00', price_min: 65, price_max: 180, currency: 'EUR', category: 'Music', url: 'https://www.google.com/maps/search/Estadi+Olímpic+Barcelona' },
+    { name: 'Flamenco Night', venue: 'Palau de la Música', date: '2026-03-20', time: '19:30', price_min: 30, price_max: 60, currency: 'EUR', category: 'Arts & Theatre', url: 'https://www.google.com/maps/search/Palau+de+la+Música+Barcelona' },
   ],
   valencia: [
-    { name: 'Valencia CF vs Villarreal', venue: 'Mestalla', date: '2026-03-21', time: '18:30', price_min: 30, price_max: 120, currency: 'EUR', category: 'Sports' },
-    { name: 'Aitana - Alpha Tour', venue: 'Palau de les Arts', date: '2026-03-20', time: '21:00', price_min: 40, price_max: 95, currency: 'EUR', category: 'Music' },
-    { name: 'Las Fallas Night Show', venue: 'Plaza del Ayuntamiento', date: '2026-03-19', time: '00:00', price_min: 0, price_max: 0, currency: 'EUR', category: 'Festival' },
+    { name: 'Valencia CF vs Villarreal', venue: 'Mestalla', date: '2026-03-21', time: '18:30', price_min: 30, price_max: 120, currency: 'EUR', category: 'Sports', url: 'https://www.google.com/maps/search/Mestalla+Valencia' },
+    { name: 'Aitana - Alpha Tour', venue: 'Palau de les Arts', date: '2026-03-20', time: '21:00', price_min: 40, price_max: 95, currency: 'EUR', category: 'Music', url: 'https://www.google.com/maps/search/Palau+de+les+Arts+Valencia' },
+    { name: 'Las Fallas Night Show', venue: 'Plaza del Ayuntamiento', date: '2026-03-19', time: '00:00', price_min: 0, price_max: 0, currency: 'EUR', category: 'Festival', url: 'https://www.google.com/maps/search/Plaza+del+Ayuntamiento+Valencia' },
   ],
   lisbon: [
-    { name: 'Benfica vs Porto', venue: 'Estádio da Luz', date: '2026-03-21', time: '20:00', price_min: 25, price_max: 90, currency: 'EUR', category: 'Sports' },
-    { name: 'Fado Night - Ana Moura', venue: 'Casa da Música', date: '2026-03-20', time: '21:30', price_min: 20, price_max: 55, currency: 'EUR', category: 'Music' },
+    { name: 'Benfica vs Porto', venue: 'Estádio da Luz', date: '2026-03-21', time: '20:00', price_min: 25, price_max: 90, currency: 'EUR', category: 'Sports', url: 'https://www.google.com/maps/search/Estádio+da+Luz+Lisbon' },
+    { name: 'Fado Night - Ana Moura', venue: 'Casa da Música', date: '2026-03-20', time: '21:30', price_min: 20, price_max: 55, currency: 'EUR', category: 'Music', url: 'https://www.google.com/maps/search/Casa+da+Música+Lisbon' },
   ],
   sevilla: [
-    { name: 'Sevilla FC vs Real Betis', venue: 'Ramón Sánchez-Pizjuán', date: '2026-03-21', time: '21:00', price_min: 35, price_max: 150, currency: 'EUR', category: 'Sports' },
-    { name: 'Flamenco Puro - Sara Baras', venue: 'Teatro de la Maestranza', date: '2026-03-20', time: '20:00', price_min: 25, price_max: 70, currency: 'EUR', category: 'Arts & Theatre' },
+    { name: 'Sevilla FC vs Real Betis', venue: 'Ramón Sánchez-Pizjuán', date: '2026-03-21', time: '21:00', price_min: 35, price_max: 150, currency: 'EUR', category: 'Sports', url: 'https://www.google.com/maps/search/Ramón+Sánchez-Pizjuán+Sevilla' },
+    { name: 'Flamenco Puro - Sara Baras', venue: 'Teatro de la Maestranza', date: '2026-03-20', time: '20:00', price_min: 25, price_max: 70, currency: 'EUR', category: 'Arts & Theatre', url: 'https://www.google.com/maps/search/Teatro+de+la+Maestranza+Sevilla' },
   ],
 }
 
@@ -73,6 +74,7 @@ export const eventsHandler: SkillHandler = async (message) => {
         _embedded?: {
           events: Array<{
             name: string
+            url: string
             dates: { start: { localDate: string; localTime?: string } }
             _embedded?: { venues: Array<{ name: string }> }
             priceRanges?: Array<{ min: number; max: number; currency: string }>
@@ -91,6 +93,7 @@ export const eventsHandler: SkillHandler = async (message) => {
           price_max: e.priceRanges?.[0]?.max || null,
           currency: e.priceRanges?.[0]?.currency || 'EUR',
           category: e.classifications?.[0]?.segment?.name || 'Event',
+          url: e.url || '',
         }))
       } else {
         // No events found in API, use mock
@@ -102,7 +105,8 @@ export const eventsHandler: SkillHandler = async (message) => {
       const summary = events
         .map(e => {
           const price = e.price_min != null ? `${e.price_min}-${e.price_max} ${e.currency}` : 'Free/TBA'
-          return `  ${e.date} ${e.time} | ${e.name} | ${e.venue} | ${price} (${e.category})`
+          const link = e.url ? ` | Link: ${e.url}` : ''
+          return `  ${e.date} ${e.time} | ${e.name} | ${e.venue} | ${price} (${e.category})${link}`
         })
         .join('\n')
 

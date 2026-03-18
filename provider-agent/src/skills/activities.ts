@@ -6,6 +6,7 @@ interface Activity {
   type: string
   rating: number
   address: string
+  url?: string
 }
 
 const MOCK_ACTIVITIES: Record<string, Activity[]> = {
@@ -72,7 +73,7 @@ export const activitiesHandler: SkillHandler = async (message) => {
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': apiKey,
-          'X-Goog-FieldMask': 'places.displayName,places.rating,places.formattedAddress,places.primaryTypeDisplayName',
+          'X-Goog-FieldMask': 'places.displayName,places.rating,places.formattedAddress,places.primaryTypeDisplayName,places.googleMapsUri',
         },
         body: JSON.stringify(body),
       })
@@ -85,6 +86,7 @@ export const activitiesHandler: SkillHandler = async (message) => {
           rating?: number
           formattedAddress?: string
           primaryTypeDisplayName?: { text: string }
+          googleMapsUri?: string
         }>
       }
 
@@ -94,11 +96,15 @@ export const activitiesHandler: SkillHandler = async (message) => {
           type: p.primaryTypeDisplayName?.text || 'Attraction',
           rating: p.rating || 0,
           address: p.formattedAddress || '',
+          url: p.googleMapsUri || '',
         }))
 
         const displayCity = city.charAt(0).toUpperCase() + city.slice(1)
         const summary = activities
-          .map(a => `  ${a.name} (${a.type}, ${a.rating}/5) - ${a.address}`)
+          .map(a => {
+          const link = a.url ? ` | Link: ${a.url}` : ''
+          return `  ${a.name} (${a.type}, ${a.rating}/5) - ${a.address}${link}`
+        })
           .join('\n')
 
         return {
@@ -116,7 +122,10 @@ export const activitiesHandler: SkillHandler = async (message) => {
   const displayCity = city.charAt(0).toUpperCase() + city.slice(1)
 
   const summary = activities
-    .map(a => `  ${a.name} (${a.type}, ${a.rating}/5) - ${a.address}`)
+    .map(a => {
+          const link = a.url ? ` | Link: ${a.url}` : ''
+          return `  ${a.name} (${a.type}, ${a.rating}/5) - ${a.address}${link}`
+        })
     .join('\n')
 
   return {

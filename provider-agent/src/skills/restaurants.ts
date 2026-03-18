@@ -7,6 +7,7 @@ interface Restaurant {
   price_level: string
   address: string
   cuisine_type: string
+  url?: string
 }
 
 const MOCK_RESTAURANTS: Record<string, Restaurant[]> = {
@@ -81,7 +82,7 @@ export const restaurantsHandler: SkillHandler = async (message) => {
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': apiKey,
-          'X-Goog-FieldMask': 'places.displayName,places.rating,places.priceLevel,places.formattedAddress,places.primaryTypeDisplayName',
+          'X-Goog-FieldMask': 'places.displayName,places.rating,places.priceLevel,places.formattedAddress,places.primaryTypeDisplayName,places.googleMapsUri',
         },
         body: JSON.stringify(body),
       })
@@ -95,6 +96,7 @@ export const restaurantsHandler: SkillHandler = async (message) => {
           priceLevel?: string
           formattedAddress?: string
           primaryTypeDisplayName?: { text: string }
+          googleMapsUri?: string
         }>
       }
 
@@ -105,11 +107,15 @@ export const restaurantsHandler: SkillHandler = async (message) => {
           price_level: p.priceLevel || 'PRICE_LEVEL_MODERATE',
           address: p.formattedAddress || '',
           cuisine_type: p.primaryTypeDisplayName?.text || 'Restaurant',
+          url: p.googleMapsUri || '',
         }))
 
         const displayCity = city.charAt(0).toUpperCase() + city.slice(1)
         const summary = restaurants
-          .map(r => `  ${r.name} (${r.rating}/5, ${formatPriceLevel(r.price_level)}) - ${r.cuisine_type} - ${r.address}`)
+          .map(r => {
+          const link = r.url ? ` | Link: ${r.url}` : ''
+          return `  ${r.name} (${r.rating}/5, ${formatPriceLevel(r.price_level)}) - ${r.cuisine_type} - ${r.address}${link}`
+        })
           .join('\n')
 
         return {
@@ -127,7 +133,10 @@ export const restaurantsHandler: SkillHandler = async (message) => {
   const displayCity = city.charAt(0).toUpperCase() + city.slice(1)
 
   const summary = restaurants
-    .map(r => `  ${r.name} (${r.rating}/5, ${formatPriceLevel(r.price_level)}) - ${r.cuisine_type} - ${r.address}`)
+    .map(r => {
+          const link = r.url ? ` | Link: ${r.url}` : ''
+          return `  ${r.name} (${r.rating}/5, ${formatPriceLevel(r.price_level)}) - ${r.cuisine_type} - ${r.address}${link}`
+        })
     .join('\n')
 
   return {

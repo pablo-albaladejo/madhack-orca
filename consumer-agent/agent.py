@@ -35,11 +35,13 @@ After gathering results, compose a day-by-day itinerary:
 - Restaurant suggestions for each meal
 - Include prices. Be concise, use bullet points.
 
-IMPORTANT: For every place, restaurant, activity, or venue you mention, include a Google Maps link:
-[Place Name](https://www.google.com/maps/search/Place+Name+City)
-For flights, link to Google Flights:
-[Flight](https://www.google.com/travel/flights)
-This makes the itinerary actionable."""
+IMPORTANT: Make the itinerary actionable with links:
+- If a "Link:" URL is provided in the tool results, use it: [Place Name](url)
+- For restaurants and activities: use the Google Maps URL from the results
+- For events: use the Ticketmaster URL from the results
+- For flights: [Search Flights](https://www.google.com/travel/flights)
+- For hotels: [Hotel Name](https://www.google.com/maps/search/Hotel+Name+City)
+Always prefer real URLs from the data over generated ones."""
 
 # Checkpointer for multi-turn conversations
 memory = MemorySaver()
